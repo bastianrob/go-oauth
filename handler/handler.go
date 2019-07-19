@@ -14,6 +14,7 @@ type CredentialHandler interface {
 	Register() middleware.HTTPMiddleware
 	Login() middleware.HTTPMiddleware
 	Logout() middleware.HTTPMiddleware
+	SetClaims() middleware.HTTPMiddleware
 	Callback() middleware.HTTPMiddleware
 }
 

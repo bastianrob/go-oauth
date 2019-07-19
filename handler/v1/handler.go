@@ -43,7 +43,29 @@ func (hndl *credentialHandler) Register() middleware.HTTPMiddleware {
 				return
 			}
 
-			w.WriteHeader(http.StatusCreated)
+			accessToken, refreshToken, err := hndl.service.Login(ctx, register.Email, register.Password)
+			if err != nil {
+				//Do better error handling
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
+			w.Header().Set("X-CSRF-Token", accessToken.CSRFToken)
+			http.SetCookie(w, &http.Cookie{
+				Name:     "access_token",
+				Value:    accessToken.Token,
+				Secure:   true, //HTTPS only
+				HttpOnly: true, //Can't be fetched by JavaScript
+				Expires:  accessToken.Expiry,
+			})
+			http.SetCookie(w, &http.Cookie{
+				Name:     "refresh_token",
+				Value:    refreshToken.Token,
+				Secure:   true, //HTTPS only
+				HttpOnly: true, //Can't be fetched by JavaScript
+				Expires:  refreshToken.Expiry,
+			})
+			http.Redirect(w, r, "/", http.StatusOK)
 			h.ServeHTTP(w, r)
 		}
 	}
@@ -104,6 +126,50 @@ func (hndl *credentialHandler) Logout() middleware.HTTPMiddleware {
 				Value:  "",
 				MaxAge: 0,
 			})
+			h.ServeHTTP(w, r)
+		}
+	}
+}
+
+func (hndl *credentialHandler) SetClaims() middleware.HTTPMiddleware {
+	return func(h http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			defer r.Body.Close()
+			body, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			ctx := r.Context()
+			email, ok := ctx.Value(handler.ContextKeyEmail).(string)
+			if !ok {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+
+			accessToken, refreshToken, err := hndl.service.SetClaims(ctx, email, body)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
+			w.Header().Set("X-CSRF-Token", accessToken.CSRFToken)
+			http.SetCookie(w, &http.Cookie{
+				Name:     "access_token",
+				Value:    accessToken.Token,
+				Secure:   true, //HTTPS only
+				HttpOnly: true, //Can't be fetched by JavaScript
+				Expires:  accessToken.Expiry,
+			})
+			http.SetCookie(w, &http.Cookie{
+				Name:     "refresh_token",
+				Value:    refreshToken.Token,
+				Secure:   true, //HTTPS only
+				HttpOnly: true, //Can't be fetched by JavaScript
+				Expires:  refreshToken.Expiry,
+			})
+			w.WriteHeader(http.StatusOK)
 			h.ServeHTTP(w, r)
 		}
 	}

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"os"
 	"time"
 
@@ -31,5 +32,6 @@ func init() {
 //AuthClaims custom claims to be embedded in Auth Token
 type AuthClaims struct {
 	jwt.StandardClaims
-	CSRFToken string `json:"csrf"`
+	CSRFToken    string          `json:"csrf,omitempty"`
+	CustomClaims json.RawMessage `json:"custom_claims,omitempty"`
 }

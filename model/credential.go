@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"errors"
 	"net/mail"
 	"strings"
@@ -13,10 +14,11 @@ import (
 
 //Credential data model
 type Credential struct {
-	ID       string `json:"id" bson:"_id"`
-	Email    string `json:"email" bson:"email"`
-	Password string `json:"password" bson:"password"` //Salted + hashed using bcrypt
-	Provider string `json:"provider" bson:"provider"` //GOOGLE, FACEBOOK, EMAIL
+	ID       string          `json:"id" bson:"_id"`
+	Email    string          `json:"email" bson:"email"`
+	Password string          `json:"password" bson:"password"` //Salted + hashed using bcrypt
+	Provider string          `json:"provider" bson:"provider"` //GOOGLE, FACEBOOK, EMAIL
+	Claims   json.RawMessage `json:"custom_claims" bson:"custom_claims"`
 }
 
 //Create initialize new credential
@@ -70,7 +72,8 @@ func (cred *Credential) GenerateJWT() (AccessToken, RefreshToken, error) {
 			ExpiresAt: exp.Unix(),
 			Subject:   cred.Email,
 		},
-		CSRFToken: csrf,
+		CSRFToken:    csrf,
+		CustomClaims: cred.Claims,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &authclaims)
 	tokenString, err := token.SignedString([]byte(secret))

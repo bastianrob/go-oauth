@@ -17,4 +17,5 @@ type CredentialRepo interface {
 	Count(ctx context.Context, email string) int
 	Get(ctx context.Context, email string) (model.Credential, error)
 	Create(ctx context.Context, cred model.Credential) error
+	Update(ctx context.Context, email string, cred model.Credential) (model.Credential, error)
 }

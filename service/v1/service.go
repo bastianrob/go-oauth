@@ -2,6 +2,7 @@ package goog
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/bastianrob/go-oauth/model"
 	"github.com/bastianrob/go-oauth/repo"
@@ -77,6 +78,25 @@ func (svc *credentialService) Login(ctx context.Context, email, password string)
 	}
 
 	//Success, create JWT token
+	return cred.GenerateJWT()
+}
+
+func (svc *credentialService) SetClaims(ctx context.Context, email string, claims json.RawMessage) (model.AccessToken, model.RefreshToken, error) {
+	cred, err := svc.repo.Get(ctx, email)
+	if err == repo.ErrNotFound {
+		//user not found, cannot login
+		return model.AccessToken{}, model.RefreshToken{}, service.ErrNotFound
+	} else if err != nil {
+		//Error 500: unknown error, cannot login
+		return model.AccessToken{}, model.RefreshToken{}, err
+	}
+
+	cred.Claims = claims
+	cred, err = svc.repo.Update(ctx, email, cred)
+	if err != nil {
+		return model.AccessToken{}, model.RefreshToken{}, err
+	}
+
 	return cred.GenerateJWT()
 }
 

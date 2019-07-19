@@ -14,6 +14,7 @@ var (
 	lockCredentialRepoMockCount  sync.RWMutex
 	lockCredentialRepoMockCreate sync.RWMutex
 	lockCredentialRepoMockGet    sync.RWMutex
+	lockCredentialRepoMockUpdate sync.RWMutex
 )
 
 // CredentialRepoMock is a mock implementation of CredentialRepo.
@@ -31,6 +32,9 @@ var (
 //             GetFunc: func(ctx context.Context, email string) (model.Credential, error) {
 // 	               panic("mock out the Get method")
 //             },
+//             UpdateFunc: func(ctx context.Context, email string, cred model.Credential) (model.Credential, error) {
+// 	               panic("mock out the Update method")
+//             },
 //         }
 //
 //         // use mockedCredentialRepo in code that requires CredentialRepo
@@ -46,6 +50,9 @@ type CredentialRepoMock struct {
 
 	// GetFunc mocks the Get method.
 	GetFunc func(ctx context.Context, email string) (model.Credential, error)
+
+	// UpdateFunc mocks the Update method.
+	UpdateFunc func(ctx context.Context, email string, cred model.Credential) (model.Credential, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -69,6 +76,15 @@ type CredentialRepoMock struct {
 			Ctx context.Context
 			// Email is the email argument value.
 			Email string
+		}
+		// Update holds details about calls to the Update method.
+		Update []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Email is the email argument value.
+			Email string
+			// Cred is the cred argument value.
+			Cred model.Credential
 		}
 	}
 }
@@ -175,5 +191,44 @@ func (mock *CredentialRepoMock) GetCalls() []struct {
 	lockCredentialRepoMockGet.RLock()
 	calls = mock.calls.Get
 	lockCredentialRepoMockGet.RUnlock()
+	return calls
+}
+
+// Update calls UpdateFunc.
+func (mock *CredentialRepoMock) Update(ctx context.Context, email string, cred model.Credential) (model.Credential, error) {
+	if mock.UpdateFunc == nil {
+		panic("CredentialRepoMock.UpdateFunc: method is nil but CredentialRepo.Update was just called")
+	}
+	callInfo := struct {
+		Ctx   context.Context
+		Email string
+		Cred  model.Credential
+	}{
+		Ctx:   ctx,
+		Email: email,
+		Cred:  cred,
+	}
+	lockCredentialRepoMockUpdate.Lock()
+	mock.calls.Update = append(mock.calls.Update, callInfo)
+	lockCredentialRepoMockUpdate.Unlock()
+	return mock.UpdateFunc(ctx, email, cred)
+}
+
+// UpdateCalls gets all the calls that were made to Update.
+// Check the length with:
+//     len(mockedCredentialRepo.UpdateCalls())
+func (mock *CredentialRepoMock) UpdateCalls() []struct {
+	Ctx   context.Context
+	Email string
+	Cred  model.Credential
+} {
+	var calls []struct {
+		Ctx   context.Context
+		Email string
+		Cred  model.Credential
+	}
+	lockCredentialRepoMockUpdate.RLock()
+	calls = mock.calls.Update
+	lockCredentialRepoMockUpdate.RUnlock()
 	return calls
 }
