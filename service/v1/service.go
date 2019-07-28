@@ -91,7 +91,10 @@ func (svc *credentialService) SetClaims(ctx context.Context, email string, claim
 		return model.AccessToken{}, model.RefreshToken{}, err
 	}
 
-	cred.Claims = claims
+	cc := map[string]interface{}{}
+	json.Unmarshal(claims, &cc)
+
+	cred.Claims = cc
 	cred, err = svc.repo.Update(ctx, email, cred)
 	if err != nil {
 		return model.AccessToken{}, model.RefreshToken{}, err

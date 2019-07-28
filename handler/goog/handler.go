@@ -82,18 +82,20 @@ func (goog *googleCredHandler) Callback() middleware.HTTPMiddleware {
 			http.SetCookie(w, &http.Cookie{
 				Name:     "access_token",
 				Value:    accessToken.Token,
-				Secure:   true, //HTTPS only
-				HttpOnly: true, //Can't be fetched by JavaScript
+				Path:     "/",
+				Secure:   false, //HTTPS only
+				HttpOnly: true,  //Can't be fetched by JavaScript
 				Expires:  accessToken.Expiry,
 			})
 			http.SetCookie(w, &http.Cookie{
 				Name:     "refresh_token",
 				Value:    refreshToken.Token,
-				Secure:   true, //HTTPS only
-				HttpOnly: true, //Can't be fetched by JavaScript
+				Path:     "/",
+				Secure:   false, //HTTPS only
+				HttpOnly: true,  //Can't be fetched by JavaScript
 				Expires:  refreshToken.Expiry,
 			})
-			http.Redirect(w, r, "/", http.StatusOK)
+			http.Redirect(w, r, "http://localhost:3000", http.StatusPermanentRedirect)
 		}
 	}
 }

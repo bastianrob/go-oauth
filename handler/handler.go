@@ -26,5 +26,9 @@ func GenerateOauthStateCookie(expires time.Time) http.Cookie {
 	rand.Read(b)
 
 	state := base64.URLEncoding.EncodeToString(b)
-	return http.Cookie{Name: "oauthstate", Value: state, Expires: expires}
+	return http.Cookie{
+		Name:    "oauthstate",
+		Value:   state,
+		Expires: expires,
+	}
 }

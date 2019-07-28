@@ -1,9 +1,11 @@
 package model
 
 import (
-	"encoding/json"
 	"os"
 	"time"
+
+	//OS ENV taken from file
+	_ "github.com/joho/godotenv/autoload"
 
 	jwt "github.com/dgrijalva/jwt-go"
 )
@@ -32,6 +34,6 @@ func init() {
 //AuthClaims custom claims to be embedded in Auth Token
 type AuthClaims struct {
 	jwt.StandardClaims
-	CSRFToken    string          `json:"csrf,omitempty"`
-	CustomClaims json.RawMessage `json:"custom_claims,omitempty"`
+	CSRFToken    string                 `json:"csrf,omitempty"`
+	CustomClaims map[string]interface{} `json:"ccm,omitempty"`
 }

@@ -1,7 +1,6 @@
 package model
 
 import (
-	"encoding/json"
 	"errors"
 	"net/mail"
 	"strings"
@@ -14,11 +13,11 @@ import (
 
 //Credential data model
 type Credential struct {
-	ID       string          `json:"id" bson:"_id"`
-	Email    string          `json:"email" bson:"email"`
-	Password string          `json:"password" bson:"password"` //Salted + hashed using bcrypt
-	Provider string          `json:"provider" bson:"provider"` //GOOGLE, FACEBOOK, EMAIL
-	Claims   json.RawMessage `json:"custom_claims" bson:"custom_claims"`
+	ID       string                 `json:"id" bson:"_id,omitempty"`
+	Email    string                 `json:"email" bson:"email,omitempty"`
+	Password string                 `json:"password" bson:"password,omitempty"` //Salted + hashed using bcrypt
+	Provider string                 `json:"provider" bson:"provider,omitempty"` //GOOGLE, FACEBOOK, EMAIL
+	Claims   map[string]interface{} `json:"custom_claims" bson:"custom_claims"`
 }
 
 //Create initialize new credential
@@ -27,8 +26,10 @@ func (cred *Credential) Create(email, pass, provider string) *Credential {
 	cred.Email = email
 	cred.Provider = provider
 
-	passhash, _ := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
-	cred.Password = string(passhash)
+	if pass != "" {
+		passhash, _ := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
+		cred.Password = string(passhash)
+	}
 	return cred
 }
 
@@ -104,7 +105,7 @@ func (cred *Credential) GenerateJWT() (AccessToken, RefreshToken, error) {
 //FromJWT parse access token into credential
 func (cred *Credential) FromJWT(tokenString string) (AuthClaims, error) {
 	authClaims := AuthClaims{}
-	token, err := jwt.ParseWithClaims(tokenString, authClaims, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &authClaims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
 	})
 
@@ -113,5 +114,6 @@ func (cred *Credential) FromJWT(tokenString string) (AuthClaims, error) {
 	}
 
 	cred.Email = authClaims.Subject
+	cred.Claims = authClaims.CustomClaims
 	return authClaims, nil
 }

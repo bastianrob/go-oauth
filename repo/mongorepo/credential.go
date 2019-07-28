@@ -17,9 +17,15 @@ type credentialRepo struct {
 	credentials *mongo.Collection
 }
 
-func (r *credentialRepo) Count(ctx context.Context, email string) (int64, error) {
+//NewCredentialRepo new instance of credential repo
+func NewCredentialRepo(db *mongo.Database) repo.CredentialRepo {
+	return &credentialRepo{db, db.Collection("user")}
+}
+
+func (r *credentialRepo) Count(ctx context.Context, email string) int {
 	findByEmail := bson.M{"email": email}
-	return r.credentials.CountDocuments(ctx, findByEmail)
+	count, _ := r.credentials.CountDocuments(ctx, findByEmail)
+	return int(count)
 }
 
 //Get 1 credential based on email address
@@ -41,4 +47,17 @@ func (r *credentialRepo) Create(ctx context.Context, cred model.Credential) erro
 	cred.ID = primitive.NewObjectIDFromTimestamp(time.Now()).Hex()
 	_, err := r.credentials.InsertOne(ctx, cred)
 	return err
+}
+
+func (r *credentialRepo) Update(ctx context.Context, email string, cred model.Credential) (model.Credential, error) {
+	findByEmail := bson.M{"email": email}
+	update := bson.M{"$set": cred}
+	res, err := r.credentials.UpdateOne(ctx, findByEmail, update)
+	if res.MatchedCount <= 0 {
+		return cred, repo.ErrNotFound
+	} else if err != nil {
+		return cred, err
+	}
+
+	return cred, nil
 }

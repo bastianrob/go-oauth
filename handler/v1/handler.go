@@ -3,11 +3,9 @@ package v1
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 
-	"golang.org/x/oauth2"
-
-	"github.com/bastianrob/go-httputil/adapter"
 	"github.com/bastianrob/go-httputil/middleware"
 	"github.com/bastianrob/go-oauth/handler"
 	"github.com/bastianrob/go-oauth/service"
@@ -19,8 +17,8 @@ type credentialHandler struct {
 	service service.CredentialService
 }
 
-//NewCredentialService new instance of CredentialHandler using in house authentication
-func NewCredentialService(conf oauth2.Config, httpAdapter adapter.HTTPAdapter, service service.CredentialService) handler.CredentialHandler {
+//NewCredentialHandler new instance of CredentialHandler using in house authentication
+func NewCredentialHandler(service service.CredentialService) handler.CredentialHandler {
 	return &credentialHandler{service: service}
 }
 
@@ -39,6 +37,7 @@ func (hndl *credentialHandler) Register() middleware.HTTPMiddleware {
 			ctx := r.Context()
 			err = hndl.service.Register(ctx, register.Email, register.Password, register.ConfirmPassword)
 			if err != nil {
+				log.Println(err.Error())
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
@@ -54,15 +53,17 @@ func (hndl *credentialHandler) Register() middleware.HTTPMiddleware {
 			http.SetCookie(w, &http.Cookie{
 				Name:     "access_token",
 				Value:    accessToken.Token,
-				Secure:   true, //HTTPS only
-				HttpOnly: true, //Can't be fetched by JavaScript
+				Path:     "/",
+				Secure:   false, //HTTPS only
+				HttpOnly: true,  //Can't be fetched by JavaScript
 				Expires:  accessToken.Expiry,
 			})
 			http.SetCookie(w, &http.Cookie{
 				Name:     "refresh_token",
 				Value:    refreshToken.Token,
-				Secure:   true, //HTTPS only
-				HttpOnly: true, //Can't be fetched by JavaScript
+				Path:     "/",
+				Secure:   false, //HTTPS only
+				HttpOnly: true,  //Can't be fetched by JavaScript
 				Expires:  refreshToken.Expiry,
 			})
 			http.Redirect(w, r, "/", http.StatusOK)
@@ -95,15 +96,17 @@ func (hndl *credentialHandler) Login() middleware.HTTPMiddleware {
 			http.SetCookie(w, &http.Cookie{
 				Name:     "access_token",
 				Value:    accessToken.Token,
-				Secure:   true, //HTTPS only
-				HttpOnly: true, //Can't be fetched by JavaScript
+				Path:     "/",
+				Secure:   false, //HTTPS only
+				HttpOnly: true,  //Can't be fetched by JavaScript
 				Expires:  accessToken.Expiry,
 			})
 			http.SetCookie(w, &http.Cookie{
 				Name:     "refresh_token",
 				Value:    refreshToken.Token,
-				Secure:   true, //HTTPS only
-				HttpOnly: true, //Can't be fetched by JavaScript
+				Path:     "/",
+				Secure:   false, //HTTPS only
+				HttpOnly: true,  //Can't be fetched by JavaScript
 				Expires:  refreshToken.Expiry,
 			})
 			http.Redirect(w, r, "/", http.StatusOK)
@@ -158,15 +161,17 @@ func (hndl *credentialHandler) SetClaims() middleware.HTTPMiddleware {
 			http.SetCookie(w, &http.Cookie{
 				Name:     "access_token",
 				Value:    accessToken.Token,
-				Secure:   true, //HTTPS only
-				HttpOnly: true, //Can't be fetched by JavaScript
+				Path:     "/",
+				Secure:   false, //HTTPS only
+				HttpOnly: true,  //Can't be fetched by JavaScript
 				Expires:  accessToken.Expiry,
 			})
 			http.SetCookie(w, &http.Cookie{
 				Name:     "refresh_token",
 				Value:    refreshToken.Token,
-				Secure:   true, //HTTPS only
-				HttpOnly: true, //Can't be fetched by JavaScript
+				Path:     "/",
+				Secure:   false, //HTTPS only
+				HttpOnly: true,  //Can't be fetched by JavaScript
 				Expires:  refreshToken.Expiry,
 			})
 			w.WriteHeader(http.StatusOK)
