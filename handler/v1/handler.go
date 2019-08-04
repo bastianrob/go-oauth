@@ -122,11 +122,13 @@ func (hndl *credentialHandler) Logout() middleware.HTTPMiddleware {
 			http.SetCookie(w, &http.Cookie{
 				Name:   "access_token",
 				Value:  "",
+				Path:   "/",
 				MaxAge: 0,
 			})
 			http.SetCookie(w, &http.Cookie{
 				Name:   "refresh_token",
 				Value:  "",
+				Path:   "/",
 				MaxAge: 0,
 			})
 			h.ServeHTTP(w, r)

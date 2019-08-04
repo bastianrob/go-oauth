@@ -95,7 +95,8 @@ func (goog *googleCredHandler) Callback() middleware.HTTPMiddleware {
 				HttpOnly: true,  //Can't be fetched by JavaScript
 				Expires:  refreshToken.Expiry,
 			})
-			http.Redirect(w, r, "http://localhost:3000", http.StatusPermanentRedirect)
+
+			http.Redirect(w, r, "/", http.StatusPermanentRedirect)
 		}
 	}
 }
