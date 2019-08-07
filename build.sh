@@ -1,2 +1,1 @@
-docker build -t go-oauth -f Dockerfile .
-docker tag go-oauth:latest bastianrob/go-oauth:latest
+docker build -t bastianrob/go-oauth:latest -f Dockerfile .

@@ -59,12 +59,17 @@ func main() {
 	googleCredentialService := googleService.NewGoogleCredentialService(credentialRepo)
 
 	httpAdapter := adapter.NewHTTPAdapter(&http.Client{})
-	googleOAuthAPIHandler := googleHandler.NewGoogleOAuth(googleOAuthConfig, httpAdapter, googleCredentialService)
+	googleOAuthAPIHandler := googleHandler.NewGoogleOAuth(
+		googleOAuthConfig,
+		httpAdapter,
+		googleCredentialService,
+		os.Getenv("OAUTH_LANDING_URL"))
 
 	inHouseServiceCredentialService := inHouseService.NewCredentialService(credentialRepo)
 	inHouseOAuthAPIHandler := inHouseHandler.NewCredentialHandler(inHouseServiceCredentialService)
 
 	r := httprouter.New()
+	healthcheck(r)
 	googleOAuthRoutes(r, googleOAuthAPIHandler)
 	inHouseRoutes(r, inHouseOAuthAPIHandler)
 
@@ -73,6 +78,10 @@ func main() {
 	router = cors.New(cors.Options{
 		AllowedOrigins: []string{
 			"http://localhost:*",
+			"http://lapelio.com",
+			"https://lapelio.com",
+			"http://*.lapelio.com",
+			"https://*.lapelio.com",
 		},
 		AllowCredentials: true,
 		AllowedMethods: []string{
@@ -103,6 +112,12 @@ func auth(endpoint func() middleware.HTTPMiddleware) http.HandlerFunc {
 		Do(oauth.Authenticate()). //Authenticate user
 		Do(endpoint()).
 		For(func(w http.ResponseWriter, r *http.Request) {})
+}
+
+func healthcheck(router *httprouter.Router) {
+	router.GET("/health", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		w.WriteHeader(http.StatusOK)
+	})
 }
 
 func googleOAuthRoutes(router *httprouter.Router, h handler.CredentialHandler) {

@@ -24,14 +24,19 @@ type googleCredHandler struct {
 	conf        oauth2.Config
 	httpAdapter adapter.HTTPAdapter
 	service     service.CredentialService
+	landing     string
 }
 
 //NewGoogleOAuth new instance of CredentialHandler using google OAuth2
-func NewGoogleOAuth(conf oauth2.Config, httpAdapter adapter.HTTPAdapter, service service.CredentialService) handler.CredentialHandler {
+func NewGoogleOAuth(conf oauth2.Config,
+	httpAdapter adapter.HTTPAdapter,
+	service service.CredentialService,
+	landing string) handler.CredentialHandler {
 	return &googleCredHandler{
 		conf:        conf,
 		httpAdapter: httpAdapter,
 		service:     service,
+		landing:     landing,
 	}
 }
 
@@ -55,14 +60,16 @@ func (goog *googleCredHandler) Callback() middleware.HTTPMiddleware {
 			oauthState, _ := r.Cookie("oauthstate")
 			if r.FormValue("state") != oauthState.Value {
 				log.Println("invalid oauth state")
-				http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+				w.WriteHeader(http.StatusConflict)
+				w.Write([]byte("invalid oauth state"))
 				return
 			}
 
 			data, err := goog.getUserDataFromGoogle(r.FormValue("code"))
 			if err != nil {
 				log.Println("failed to get user data from google: " + err.Error())
-				http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+				w.WriteHeader(http.StatusFailedDependency)
+				w.Write([]byte("failed to get user data from google: " + err.Error()))
 				return
 			}
 
@@ -71,17 +78,16 @@ func (goog *googleCredHandler) Callback() middleware.HTTPMiddleware {
 			accessToken, refreshToken, err := goog.service.Login(r.Context(), googleUserInfo.Email, "")
 			if err != nil {
 				log.Println("failed to grant JWT: " + err.Error())
-				http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("failed to grant JWT: " + err.Error()))
 				return
 			}
-
-			log.Printf("Access Token: %+v\n", accessToken)
-			log.Printf("Refresh Token: %+v\n", refreshToken)
 
 			w.Header().Set("X-CSRF-Token", accessToken.CSRFToken)
 			http.SetCookie(w, &http.Cookie{
 				Name:     "access_token",
 				Value:    accessToken.Token,
+				Domain:   ".lapelio.com",
 				Path:     "/",
 				Secure:   false, //HTTPS only
 				HttpOnly: true,  //Can't be fetched by JavaScript
@@ -90,13 +96,14 @@ func (goog *googleCredHandler) Callback() middleware.HTTPMiddleware {
 			http.SetCookie(w, &http.Cookie{
 				Name:     "refresh_token",
 				Value:    refreshToken.Token,
+				Domain:   ".lapelio.com",
 				Path:     "/",
 				Secure:   false, //HTTPS only
 				HttpOnly: true,  //Can't be fetched by JavaScript
 				Expires:  refreshToken.Expiry,
 			})
 
-			http.Redirect(w, r, "/", http.StatusPermanentRedirect)
+			http.Redirect(w, r, goog.landing, http.StatusPermanentRedirect)
 		}
 	}
 }

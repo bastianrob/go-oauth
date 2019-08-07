@@ -122,12 +122,14 @@ func (hndl *credentialHandler) Logout() middleware.HTTPMiddleware {
 			http.SetCookie(w, &http.Cookie{
 				Name:   "access_token",
 				Value:  "",
+				Domain: ".lapelio.com",
 				Path:   "/",
 				MaxAge: 0,
 			})
 			http.SetCookie(w, &http.Cookie{
 				Name:   "refresh_token",
 				Value:  "",
+				Domain: ".lapelio.com",
 				Path:   "/",
 				MaxAge: 0,
 			})
@@ -163,6 +165,7 @@ func (hndl *credentialHandler) SetClaims() middleware.HTTPMiddleware {
 			http.SetCookie(w, &http.Cookie{
 				Name:     "access_token",
 				Value:    accessToken.Token,
+				Domain:   ".lapelio.com",
 				Path:     "/",
 				Secure:   false, //HTTPS only
 				HttpOnly: true,  //Can't be fetched by JavaScript
@@ -171,6 +174,7 @@ func (hndl *credentialHandler) SetClaims() middleware.HTTPMiddleware {
 			http.SetCookie(w, &http.Cookie{
 				Name:     "refresh_token",
 				Value:    refreshToken.Token,
+				Domain:   ".lapelio.com",
 				Path:     "/",
 				Secure:   false, //HTTPS only
 				HttpOnly: true,  //Can't be fetched by JavaScript
