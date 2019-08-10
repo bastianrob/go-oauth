@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"os"
 	"crypto/rand"
 	"encoding/base64"
 	"net/http"
@@ -8,6 +9,17 @@ import (
 
 	"github.com/bastianrob/go-httputil/middleware"
 )
+
+//Cookies setting
+var (
+	CookieDomain string
+	CookieSecure bool
+)
+
+func init() {
+	CookieDomain = os.Getenv("COOKIE_DOMAIN")
+	CookieSecure = os.Getenv("COOKIE_SECURE") == "true"
+}
 
 //CredentialHandler interface to handle credential
 type CredentialHandler interface {

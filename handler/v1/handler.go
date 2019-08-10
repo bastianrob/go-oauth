@@ -53,16 +53,18 @@ func (hndl *credentialHandler) Register() middleware.HTTPMiddleware {
 			http.SetCookie(w, &http.Cookie{
 				Name:     "access_token",
 				Value:    accessToken.Token,
+				Domain:   handler.CookieDomain,
 				Path:     "/",
-				Secure:   false, //HTTPS only
+				Secure:   handler.CookieSecure, //HTTPS only
 				HttpOnly: true,  //Can't be fetched by JavaScript
 				Expires:  accessToken.Expiry,
 			})
 			http.SetCookie(w, &http.Cookie{
 				Name:     "refresh_token",
 				Value:    refreshToken.Token,
+				Domain:   handler.CookieDomain,
 				Path:     "/",
-				Secure:   false, //HTTPS only
+				Secure:   handler.CookieSecure, //HTTPS only
 				HttpOnly: true,  //Can't be fetched by JavaScript
 				Expires:  refreshToken.Expiry,
 			})
@@ -96,16 +98,18 @@ func (hndl *credentialHandler) Login() middleware.HTTPMiddleware {
 			http.SetCookie(w, &http.Cookie{
 				Name:     "access_token",
 				Value:    accessToken.Token,
+				Domain:   handler.CookieDomain,
 				Path:     "/",
-				Secure:   false, //HTTPS only
+				Secure:   handler.CookieSecure, //HTTPS only
 				HttpOnly: true,  //Can't be fetched by JavaScript
 				Expires:  accessToken.Expiry,
 			})
 			http.SetCookie(w, &http.Cookie{
 				Name:     "refresh_token",
 				Value:    refreshToken.Token,
+				Domain:   handler.CookieDomain,
 				Path:     "/",
-				Secure:   false, //HTTPS only
+				Secure:   handler.CookieSecure, //HTTPS only
 				HttpOnly: true,  //Can't be fetched by JavaScript
 				Expires:  refreshToken.Expiry,
 			})
@@ -122,14 +126,14 @@ func (hndl *credentialHandler) Logout() middleware.HTTPMiddleware {
 			http.SetCookie(w, &http.Cookie{
 				Name:   "access_token",
 				Value:  "",
-				Domain: ".lapelio.com",
+				Domain: handler.CookieDomain,
 				Path:   "/",
 				MaxAge: 0,
 			})
 			http.SetCookie(w, &http.Cookie{
 				Name:   "refresh_token",
 				Value:  "",
-				Domain: ".lapelio.com",
+				Domain: handler.CookieDomain,
 				Path:   "/",
 				MaxAge: 0,
 			})
@@ -165,18 +169,18 @@ func (hndl *credentialHandler) SetClaims() middleware.HTTPMiddleware {
 			http.SetCookie(w, &http.Cookie{
 				Name:     "access_token",
 				Value:    accessToken.Token,
-				Domain:   ".lapelio.com",
+				Domain:   handler.CookieDomain,
 				Path:     "/",
-				Secure:   false, //HTTPS only
+				Secure:   handler.CookieSecure, //HTTPS only
 				HttpOnly: true,  //Can't be fetched by JavaScript
 				Expires:  accessToken.Expiry,
 			})
 			http.SetCookie(w, &http.Cookie{
 				Name:     "refresh_token",
 				Value:    refreshToken.Token,
-				Domain:   ".lapelio.com",
+				Domain:   handler.CookieDomain,
 				Path:     "/",
-				Secure:   false, //HTTPS only
+				Secure:   handler.CookieSecure, //HTTPS only
 				HttpOnly: true,  //Can't be fetched by JavaScript
 				Expires:  refreshToken.Expiry,
 			})
