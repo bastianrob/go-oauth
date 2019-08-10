@@ -35,40 +35,14 @@ func (hndl *credentialHandler) Register() middleware.HTTPMiddleware {
 			}
 
 			ctx := r.Context()
-			err = hndl.service.Register(ctx, register.Email, register.Password, register.ConfirmPassword)
+			err = hndl.service.Register(ctx, register.Email, register.Password, register.ConfirmPassword, register.Claims)
 			if err != nil {
 				log.Println(err.Error())
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
 
-			accessToken, refreshToken, err := hndl.service.Login(ctx, register.Email, register.Password)
-			if err != nil {
-				//Do better error handling
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-
-			w.Header().Set("X-CSRF-Token", accessToken.CSRFToken)
-			http.SetCookie(w, &http.Cookie{
-				Name:     "access_token",
-				Value:    accessToken.Token,
-				Domain:   handler.CookieDomain,
-				Path:     "/",
-				Secure:   handler.CookieSecure, //HTTPS only
-				HttpOnly: true,  //Can't be fetched by JavaScript
-				Expires:  accessToken.Expiry,
-			})
-			http.SetCookie(w, &http.Cookie{
-				Name:     "refresh_token",
-				Value:    refreshToken.Token,
-				Domain:   handler.CookieDomain,
-				Path:     "/",
-				Secure:   handler.CookieSecure, //HTTPS only
-				HttpOnly: true,  //Can't be fetched by JavaScript
-				Expires:  refreshToken.Expiry,
-			})
-			http.Redirect(w, r, "/", http.StatusOK)
+			w.WriteHeader(http.StatusOK)
 			h.ServeHTTP(w, r)
 		}
 	}
@@ -101,7 +75,7 @@ func (hndl *credentialHandler) Login() middleware.HTTPMiddleware {
 				Domain:   handler.CookieDomain,
 				Path:     "/",
 				Secure:   handler.CookieSecure, //HTTPS only
-				HttpOnly: true,  //Can't be fetched by JavaScript
+				HttpOnly: true,                 //Can't be fetched by JavaScript
 				Expires:  accessToken.Expiry,
 			})
 			http.SetCookie(w, &http.Cookie{
@@ -110,7 +84,7 @@ func (hndl *credentialHandler) Login() middleware.HTTPMiddleware {
 				Domain:   handler.CookieDomain,
 				Path:     "/",
 				Secure:   handler.CookieSecure, //HTTPS only
-				HttpOnly: true,  //Can't be fetched by JavaScript
+				HttpOnly: true,                 //Can't be fetched by JavaScript
 				Expires:  refreshToken.Expiry,
 			})
 			http.Redirect(w, r, "/", http.StatusOK)
@@ -172,7 +146,7 @@ func (hndl *credentialHandler) SetClaims() middleware.HTTPMiddleware {
 				Domain:   handler.CookieDomain,
 				Path:     "/",
 				Secure:   handler.CookieSecure, //HTTPS only
-				HttpOnly: true,  //Can't be fetched by JavaScript
+				HttpOnly: true,                 //Can't be fetched by JavaScript
 				Expires:  accessToken.Expiry,
 			})
 			http.SetCookie(w, &http.Cookie{
@@ -181,7 +155,7 @@ func (hndl *credentialHandler) SetClaims() middleware.HTTPMiddleware {
 				Domain:   handler.CookieDomain,
 				Path:     "/",
 				Secure:   handler.CookieSecure, //HTTPS only
-				HttpOnly: true,  //Can't be fetched by JavaScript
+				HttpOnly: true,                 //Can't be fetched by JavaScript
 				Expires:  refreshToken.Expiry,
 			})
 			w.WriteHeader(http.StatusOK)

@@ -21,10 +21,11 @@ type Credential struct {
 }
 
 //Create initialize new credential
-func (cred *Credential) Create(email, pass, provider string) *Credential {
+func (cred *Credential) Create(email, pass, provider string, claims map[string]interface{}) *Credential {
 	cred.ID = uuid.New().String()
 	cred.Email = email
 	cred.Provider = provider
+	cred.Claims = claims
 
 	if pass != "" {
 		passhash, _ := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)

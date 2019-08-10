@@ -24,11 +24,6 @@ func NewGoogleCredentialService(repo repo.CredentialRepo) service.CredentialServ
 	return &googleCredentialService{repo: repo}
 }
 
-//Register via google is not implemented
-func (svc *googleCredentialService) Register(ctx context.Context, email, password, confirmPass string) error {
-	return service.ErrNotImplemented
-}
-
 //Login via google
 //Use user info to either register the user or sign in
 //Return token string
@@ -36,7 +31,7 @@ func (svc *googleCredentialService) Login(ctx context.Context, email, password s
 	cred, err := svc.repo.Get(ctx, email)
 	if err == repo.ErrNotFound {
 		//not found, create a new credential
-		cred.Create(email, "", provider)
+		cred.Create(email, "", provider, nil)
 		err := svc.repo.Create(ctx, cred)
 		if err != nil {
 			//error 500 failed to create user

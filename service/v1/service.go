@@ -24,10 +24,11 @@ func NewCredentialService(repo repo.CredentialRepo) service.CredentialService {
 }
 
 //Register via in house service
-func (svc *credentialService) Register(ctx context.Context, email, password, confirmPass string) error {
+func (svc *credentialService) Register(ctx context.Context, email, password, confirmPass string, claims map[string]interface{}) error {
 	//Construct credentail object from request
 	cred := model.Credential{}
-	cred.Create(email, password, provider)
+	cred.Create(email, password, provider, claims)
+	cred.Claims = claims
 
 	//Validate the credential data
 	err := cred.Validate()
@@ -35,11 +36,13 @@ func (svc *credentialService) Register(ctx context.Context, email, password, con
 		return err
 	}
 
-	//Verify that password and confirmation password is equal
+	/* Ignore password on register for now? because we only support google login
+	Verify that password and confirmation password is equal
 	err = cred.VerifyPassword(confirmPass)
 	if err != nil {
 		return err
 	}
+	*/
 
 	//Check duplicate email
 	_, err = svc.repo.Get(ctx, email)
